@@ -39,6 +39,8 @@ def evaluate(nodes: BaseNodesForLocal, num_nodes, hnet, net, criteria, device, s
             curr_data = nodes.test_loaders[node_id]
         elif split == 'val':
             curr_data = nodes.val_loaders[node_id]
+        elif split == 'test_for_comp':
+            curr_data = nodes.test_full_loaders[node_id]
         else:
             curr_data = nodes.train_loaders[node_id]
 
@@ -146,8 +148,11 @@ def train(data_name: str, data_path: str, classes_per_node: int, num_nodes: int,
             net.eval()
             batch = next(iter(nodes.test_loaders[node_id]))
             img, label = tuple(t.to(device) for t in batch)
+            print(img, label)
+            print("img: {}, label: {}".format(img, label))
             net_out = net(img)
             pred = nodes.local_layers[node_id](net_out)
+            print("pred:{}".format(pred))
             prvs_loss = criteria(pred, label)
             prvs_acc = pred.argmax(1).eq(label).sum().item() / len(label)
             net.train()

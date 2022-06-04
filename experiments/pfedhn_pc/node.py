@@ -1,5 +1,7 @@
 from experiments.dataset import gen_random_loaders
 
+from experiments.model_utils import * 
+from torch.utils.data import DataLoader
 
 class BaseNodesForLocal:
     def __init__(
@@ -13,7 +15,8 @@ class BaseNodesForLocal:
         optimizer_config,
         device,
         batch_size=128,
-        classes_per_node=2
+        classes_per_node=2,
+        if_compare = False
     ):
 
         self.data_name = data_name
@@ -29,13 +32,24 @@ class BaseNodesForLocal:
             base_optimizer(self.local_layers[i].parameters(), **optimizer_config) for i in range(self.n_nodes)
         ]
 
-        self.train_loaders, self.val_loaders, self.test_loaders = gen_random_loaders(
-            self.data_name,
-            self.data_path,
-            self.n_nodes,
-            self.batch_size,
-            self.classes_per_node
-        )
+        if if_compare:
+            dataset = "Cifar10"
+            data = read_data(dataset)
+            
+            train_loaders = []
+            test_loaders = []
+            val_loaders = []
+            for i in range(n_nodes):
+                id, train, test = read_user_data(i, data, dataset)
+            self.train_loaders = DataLoader(train, len(train))
+        else:
+            self.train_loaders, self.val_loaders, self.test_loaders = gen_random_loaders(
+                self.data_name,
+                self.data_path,
+                self.n_nodes,
+                self.batch_size,
+                self.classes_per_node
+            )
 
     def __len__(self):
         return self.n_nodes
